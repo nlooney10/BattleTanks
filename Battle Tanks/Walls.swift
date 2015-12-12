@@ -8,16 +8,17 @@
 
 import SpriteKit
 
-//class Walls: SKSpriteNode {
-//    
-//    required init?(coder aDecoder: NSCoder) {
-//        super.init(coder: aDecoder)
-//        didLoad()
+//class Walls: SKShapeNode {
+    
+//    override init(rectOfSize: CGSize) {
+//        super.init(texture: nil, color: UIColor.blackColor(), size: size)
 //    }
 //    
-//    func didLoad() {
+//    convenience init(pos: CGPoint, rectOfSize size: CGSize) {
 //        let rectangle = SKShapeNode(rectOfSize: CGSize(width:390, height:200))
-//        rectangle.position = CGPointMake(frame.midX-10, frame.midY + 50)
+//        self.init(rectOfSize size: CGSize)
+//        rectangle.position = pos
+//        rectangle.size = size
 //        rectangle.strokeColor = SKColor.blackColor()
 //        rectangle.glowWidth = 1.0
 //        rectangle.physicsBody = SKPhysicsBody(edgeChainFromPath: rectangle.path!)
@@ -25,5 +26,9 @@ import SpriteKit
 //        rectangle.physicsBody?.categoryBitMask = PhysicsCategory.Walls
 //        rectangle.physicsBody?.contactTestBitMask = PhysicsCategory.None
 //        rectangle.physicsBody?.collisionBitMask = PhysicsCategory.All
+//    }
+//
+//    required init?(coder aDecoder: NSCoder) {
+//        fatalError("init(coder:) has not been implemented")
 //    }
 //}

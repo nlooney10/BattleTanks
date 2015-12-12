@@ -6,6 +6,7 @@
 //  Copyright (c) 2015 Nicholas Looney. All rights reserved.
 //
 
+import Foundation
 import SpriteKit
 
 struct PhysicsCategory {
@@ -57,9 +58,12 @@ extension CGPoint {
         return self / length()
     }
 }
+let Pi = CGFloat(M_PI)
+let DegreesToRadians = Pi / 180
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
     var player = SKSpriteNode(imageNamed: "player")
+    var monster = SKSpriteNode(imageNamed: "monster")
     let buttonDirUp1 = ControllerButton(imageNamed: "button_dir_up_0", position: CGPoint(x: 100, y: 150))
     let buttonDirUp2 = ControllerButton(imageNamed: "button_dir_up_0", position: CGPoint(x: 550, y: 150))
     let buttonDirLeft1 = ControllerButton(imageNamed: "button_dir_left_0", position: CGPoint(x: 50, y: 100))
@@ -76,6 +80,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var lastShootingTime: CFTimeInterval = 0
     var delayBetweenShots: CFTimeInterval = 0.5
     var shooter: NSTimer?
+    var monsterShooter: NSTimer?
     
     override init(size: CGSize) {
         super.init(size: size)
@@ -87,7 +92,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     override func didMoveToView(view: SKView) {
-        backgroundColor = SKColor.grayColor()
+        backgroundColor = SKColor.whiteColor()
         //let bgimage = SKSpriteNode(imageNamed: "dirt.jpg")
         //self.addChild(bgimage)
         //bgimage.position = CGPointMake(self.size.width/2, self.size.height/2)
@@ -104,14 +109,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // Indicates what categories of objects this object that the physics engine handle contact responses to (i.e. bounce off of)
         player.physicsBody?.collisionBitMask = PhysicsCategory.Walls
         player.physicsBody?.allowsRotation = false
-        addChild(player)
+        self.addChild(player)
         
-        runAction(SKAction.repeatActionForever(
-            SKAction.sequence([
-                SKAction.runBlock(addMonster),
-                SKAction.waitForDuration(3.0)
-                ])
-            ))
+//        runAction(SKAction.repeatActionForever(
+//            SKAction.sequence([
+//                SKAction.runBlock(addMonster),
+//                SKAction.waitForDuration(3.0)
+//                ])
+//            ))
+        
+        let monster = Enemy(pos: CGPoint(x: size.width * 0.7, y: size.height * 0.7))
+        monster.position = CGPoint(x: size.width * 0.7, y: size.height * 0.7)
+        addChild(monster)
         physicsWorld.gravity = CGVectorMake(0, 0)
         physicsWorld.contactDelegate = self
         
@@ -132,17 +141,22 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         rectangle.physicsBody?.collisionBitMask = PhysicsCategory.All
         self.addChild(rectangle)
         
-        let line = SKShapeNode(rectOfSize: CGSize(width: 0, height: 50))
-        line.position = CGPointMake(frame.midX-10, frame.midY + 50)
+//        let rectangle = Walls(pos: CGPointMake(frame.midX-10, frame.midY + 50))
+//        self.addChild(rectangle)
+        
+        let line = SKShapeNode(rectOfSize: CGSize(width: 0, height: 40))
+        line.position = CGPointMake(frame.midX-10, frame.midY + 80)
         line.strokeColor = SKColor.blackColor()
         line.glowWidth = 1.0
         
-        line.physicsBody = SKPhysicsBody(edgeLoopFromPath: rectangle.path!)
+        line.physicsBody = SKPhysicsBody(edgeChainFromPath: line.path!)
         line.physicsBody?.dynamic = false
         line.physicsBody?.categoryBitMask = PhysicsCategory.Walls
         line.physicsBody?.contactTestBitMask = PhysicsCategory.None
         line.physicsBody?.collisionBitMask = PhysicsCategory.All
         self.addChild(line)
+        
+        self.monsterShooter = NSTimer.scheduledTimerWithTimeInterval(0.5, target: self, selector: "enemyShoot", userInfo: nil, repeats: true)
         
         buttonDirUp1.alpha = 0.2
         self.addChild(buttonDirUp1)
@@ -257,7 +271,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 //        let repeatForever = SKAction.repeatActionForever(sequence)
 //        
 //        music.runAction(repeatForever)
-        
         print(self.size)
     }
     
@@ -274,11 +287,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
             for button in [buttonDirUp2, buttonDirLeft2, buttonDirDown2, buttonDirRight2] {
                 // Check if they are already registered in the list
-                if button.hitboxContainsPoint(location) && pressedButtons2.indexOf(button) == nil {
+                if button.hitboxContainsPoint(location) && pressedButtons2.indexOf(button) == nil && pressedButtons2.count < 2 {
                     pressedButtons2.append(button)
                     print("right buttons tapped \(location)")
-                    self.shooter = NSTimer.scheduledTimerWithTimeInterval(0.5, target: self, selector: "shoot", userInfo: nil, repeats: true)
-                    self.shooter!.fire()
+                    if pressedButtons2.count == 1 {
+                        self.shooter = NSTimer.scheduledTimerWithTimeInterval(0.5, target: self, selector: "shoot", userInfo: nil, repeats: true)
+                        self.shooter!.fire()
+                    }
                 }
             }
         }
@@ -360,11 +375,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         return random() * (max - min) + min
     }
     
-    func addMonster() {
+    //func addMonster() {
         
         // Create sprite
-        let monster = Enemy(pos: CGPoint(x: size.width * 0.7, y: size.height * 0.7))
-        addChild(monster)
+        //let monster = Enemy(pos: CGPoint(x: size.width * 0.7, y: size.height * 0.7))
+        //addChild(monster)
         
         // Create the actions
         //let actionMove = SKAction.moveTo(CGPoint(x: -monster.size.width/2, y: actualY), duration: NSTimeInterval(actualDuration))
@@ -377,7 +392,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 //        monster.runAction(SKAction.sequence([actionMove, loseAction, actionMoveDone]))
         //monster.runAction(SKAction.sequence([actionMove, actionMoveDone]))
         
-    }
+    //}
     
     override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
         touchesEndedOrCancelled(touches, withEvent: event)
@@ -500,117 +515,149 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func shoot() {
-//        // Choose one of the touches to work with
-//        guard let touch = touches.first else {
-//            return
-//        }
-//        let touchLocation = touch.locationInNode(self)
-//        
+        
         // Play sound effect on touch
-        runAction(SKAction.playSoundFileNamed("M1 Garand.mp3", waitForCompletion: false))
-        
-        // Set up initial location of projectile
-        let projectile = SKSpriteNode(imageNamed: "projectile")
-        var playerpos = player.position
-        if pressedButtons2.indexOf(buttonDirLeft2) != nil {
-            playerpos.x = playerpos.x - (0.5 * player.size.width)
-            projectile.position = playerpos
-        }
-        if pressedButtons2.indexOf(buttonDirRight2) != nil {
-            playerpos.x = playerpos.x + (0.5 * player.size.width)
-            projectile.position = playerpos
-        }
-        if pressedButtons2.indexOf(buttonDirUp2) != nil {
-            playerpos.y = playerpos.y + (0.5 * player.size.height)
-            projectile.position = playerpos
-        }
-        if pressedButtons2.indexOf(buttonDirDown2) != nil {
-            playerpos.y = playerpos.y - (0.5 * player.size.height)
-            projectile.position = playerpos
-        }
-        else if (pressedButtons2.indexOf(buttonDirUp2) != nil) && (pressedButtons2.indexOf(buttonDirRight2) != nil) {
-            playerpos.y = playerpos.y + (0.5 * player.size.height)
-            playerpos.x = playerpos.x - (0.5 * player.size.width)
-            projectile.position = playerpos
-        }
-        else if (pressedButtons2.indexOf(buttonDirUp2) != nil) && (pressedButtons2.indexOf(buttonDirLeft2) != nil) {
-            playerpos.y = playerpos.y + (0.5 * player.size.height)
-            playerpos.x = playerpos.x - (0.5 * player.size.width)
-            projectile.position = playerpos
-        }
-        else if (pressedButtons2.indexOf(buttonDirDown2) != nil) && (pressedButtons2.indexOf(buttonDirRight2) != nil) {
-            playerpos.x = playerpos.x + (0.5 * player.size.width)
-            playerpos.y = playerpos.y - (0.5 * player.size.height)
-            projectile.position = playerpos
-        }
-        else if (pressedButtons2.indexOf(buttonDirDown2) != nil) && (pressedButtons2.indexOf(buttonDirLeft2) != nil) {
-            playerpos.y = playerpos.y - (0.5 * player.size.height)
-            playerpos.x = playerpos.x - (0.5 * player.size.width)
-            projectile.position = playerpos
-        }
-        
-        projectile.physicsBody = SKPhysicsBody(circleOfRadius: projectile.size.width/2)
-        projectile.physicsBody?.dynamic = true
-        projectile.physicsBody?.categoryBitMask = PhysicsCategory.Projectile
-        projectile.physicsBody?.contactTestBitMask = PhysicsCategory.Monster
-        projectile.physicsBody?.collisionBitMask = PhysicsCategory.None
-        // Important to set for fast moving bodies (like projectiles), because otherwise there is a chance that two fast moving bodies can pass through each other without a collision being detected
-        projectile.physicsBody?.usesPreciseCollisionDetection = true
-        
-        var speed: CGFloat = 3.0
-        
         if pressedButtons2.count > 0 {
-            addChild(projectile)
-        }
-        
-        if pressedButtons2.count == 2 {
-            speed = speed / sqrt(2.0)
-            if (pressedButtons2.indexOf(buttonDirUp2) != nil) && (pressedButtons2.indexOf(buttonDirRight2) != nil) {
-                projectile.physicsBody?.applyImpulse(CGVector(dx:speed, dy:speed))
+            runAction(SKAction.playSoundFileNamed("M1 Garand.mp3", waitForCompletion: false))
+            SKAction.changeVolumeTo(0.1, duration: 0)
+            
+            // Set up initial location of projectile
+            let projectile = SKSpriteNode(imageNamed: "projectile")
+            var playerpos = player.position
+            if pressedButtons2.count == 1 {
+                if pressedButtons2.indexOf(buttonDirLeft2) != nil {
+                    playerpos.x = playerpos.x - (0.9 * player.size.width)
+                    projectile.position = playerpos
+                }
+                else if pressedButtons2.indexOf(buttonDirRight2) != nil {
+                    playerpos.x = playerpos.x + (0.9 * player.size.width)
+                    projectile.position = playerpos
+                }
+                else if pressedButtons2.indexOf(buttonDirUp2) != nil {
+                    playerpos.y = playerpos.y + (0.8 * player.size.height)
+                    projectile.position = playerpos
+                }
+                else if pressedButtons2.indexOf(buttonDirDown2) != nil {
+                    playerpos.y = playerpos.y - (0.8 * player.size.height)
+                    projectile.position = playerpos
+                }
             }
-            if (pressedButtons2.indexOf(buttonDirUp2) != nil) && (pressedButtons2.indexOf(buttonDirLeft2) != nil) {
-                projectile.physicsBody?.applyImpulse(CGVector(dx:-speed, dy:speed))
+            else if pressedButtons2.count == 2 {
+                if (pressedButtons2.indexOf(buttonDirUp2) != nil) && (pressedButtons2.indexOf(buttonDirRight2) != nil) {
+                    playerpos.y = playerpos.y + (0.8 * player.size.height)
+                    playerpos.x = playerpos.x + (0.8 * player.size.width)
+                    projectile.position = playerpos
+                }
+                else if (pressedButtons2.indexOf(buttonDirUp2) != nil) && (pressedButtons2.indexOf(buttonDirLeft2) != nil) {
+                    playerpos.y = playerpos.y + (0.8 * player.size.height)
+                    playerpos.x = playerpos.x - (0.8 * player.size.width)
+                    projectile.position = playerpos
+                }
+                else if (pressedButtons2.indexOf(buttonDirDown2) != nil) && (pressedButtons2.indexOf(buttonDirRight2) != nil) {
+                    playerpos.x = playerpos.x + (0.8 * player.size.width)
+                    playerpos.y = playerpos.y - (0.8 * player.size.height)
+                    projectile.position = playerpos
+                }
+                else if (pressedButtons2.indexOf(buttonDirDown2) != nil) && (pressedButtons2.indexOf(buttonDirLeft2) != nil) {
+                    playerpos.y = playerpos.y - (0.8 * player.size.height)
+                    playerpos.x = playerpos.x - (0.8 * player.size.width)
+                    projectile.position = playerpos
+                }
             }
-            if (pressedButtons2.indexOf(buttonDirDown2) != nil) && (pressedButtons2.indexOf(buttonDirRight2) != nil) {
-                projectile.physicsBody?.applyImpulse(CGVector(dx:speed, dy:-speed))
+            
+            projectile.physicsBody = SKPhysicsBody(circleOfRadius: projectile.size.width/2)
+            projectile.physicsBody?.dynamic = true
+            projectile.physicsBody?.categoryBitMask = PhysicsCategory.Projectile
+            projectile.physicsBody?.contactTestBitMask = PhysicsCategory.Monster
+            projectile.physicsBody?.collisionBitMask = PhysicsCategory.None
+            // Important to set for fast moving bodies (like projectiles), because otherwise there is a chance that two fast moving bodies can pass through each other without a collision being detected
+            projectile.physicsBody?.usesPreciseCollisionDetection = true
+            
+            var speed: CGFloat = 3.0
+            
+            if pressedButtons2.count > 0 {
+                addChild(projectile)
             }
-            if (pressedButtons2.indexOf(buttonDirDown2) != nil) && (pressedButtons2.indexOf(buttonDirLeft2) != nil) {
-                projectile.physicsBody?.applyImpulse(CGVector(dx:-speed, dy:-speed))
+            
+            if pressedButtons2.count == 2 {
+                speed = speed / sqrt(2.0)
+                if (pressedButtons2.indexOf(buttonDirUp2) != nil) && (pressedButtons2.indexOf(buttonDirRight2) != nil) && (pressedButtons2.indexOf(buttonDirDown2) == nil) && (pressedButtons2.indexOf(buttonDirLeft2) == nil){
+                    projectile.physicsBody?.applyImpulse(CGVector(dx:speed, dy:speed))
+                }
+                else if (pressedButtons2.indexOf(buttonDirUp2) != nil) && (pressedButtons2.indexOf(buttonDirLeft2) != nil) && (pressedButtons2.indexOf(buttonDirDown2) == nil) && (pressedButtons2.indexOf(buttonDirRight2) == nil) {
+                    projectile.physicsBody?.applyImpulse(CGVector(dx:-speed, dy:speed))
+                }
+                else if (pressedButtons2.indexOf(buttonDirDown2) != nil) && (pressedButtons2.indexOf(buttonDirRight2) != nil) && (pressedButtons2.indexOf(buttonDirUp2) == nil) && (pressedButtons2.indexOf(buttonDirLeft2) == nil) {
+                    projectile.physicsBody?.applyImpulse(CGVector(dx:speed, dy:-speed))
+                }
+                else if (pressedButtons2.indexOf(buttonDirDown2) != nil) && (pressedButtons2.indexOf(buttonDirLeft2) != nil) && (pressedButtons2.indexOf(buttonDirUp2) == nil) && (pressedButtons2.indexOf(buttonDirRight2) == nil) {
+                    projectile.physicsBody?.applyImpulse(CGVector(dx:-speed, dy:-speed))
+                }
             }
-        }
-        
-        if pressedButtons2.indexOf(buttonDirUp2) != nil {
-            projectile.physicsBody?.applyImpulse(CGVector(dx:0, dy:speed))
-        }
-        if pressedButtons2.indexOf(buttonDirDown2) != nil {
-            projectile.physicsBody?.applyImpulse(CGVector(dx:0, dy:-speed))
-        }
-        if pressedButtons2.indexOf(buttonDirLeft2) != nil {
-            projectile.physicsBody?.applyImpulse(CGVector(dx:-speed, dy:0))
-        }
-        if pressedButtons2.indexOf(buttonDirRight2) != nil {
-            projectile.physicsBody?.applyImpulse(CGVector(dx:speed, dy:0))
-        }
+            
+            else if pressedButtons2.indexOf(buttonDirUp2) != nil {
+                projectile.physicsBody?.applyImpulse(CGVector(dx:0, dy:speed))
+            }
+            else if pressedButtons2.indexOf(buttonDirDown2) != nil {
+                projectile.physicsBody?.applyImpulse(CGVector(dx:0, dy:-speed))
+            }
+            else if pressedButtons2.indexOf(buttonDirLeft2) != nil {
+                projectile.physicsBody?.applyImpulse(CGVector(dx:-speed, dy:0))
+            }
+            else if pressedButtons2.indexOf(buttonDirRight2) != nil {
+                projectile.physicsBody?.applyImpulse(CGVector(dx:speed, dy:0))
+            }
 //
 //        // Determine offset of location to projectile
 //        let offset = touchLocation - projectile.position
-//        
+//
 //        addChild(projectile)
 //
 //        // Get the direction of where to shoot
 //        let direction = offset.normalized()
-//        
+//
 //        // Make it shoot far enough to be guaranteed off screen
 //        let shootAmount = direction * 1000
-//        
+//
 //        // Add the shoot amount to the current position
 //        let realDest = shootAmount + projectile.position
-//        
+//
 //        // Create the actions
 //        let actionMove = SKAction.moveTo(realDest, duration: 2.0)
 //        let actionMoveDone = SKAction.removeFromParent()
 //        projectile.runAction(SKAction.sequence([actionMove, actionMoveDone]))
         print("Shooting")
+        }
+    }
+    
+    func enemyShoot() {
+        runAction(SKAction.playSoundFileNamed("M1 Garand.mp3", waitForCompletion: false))
+        let monProjectile = SKSpriteNode(imageNamed: "projectile")
+        var monpon = CGPoint(x: size.width * 0.7, y: size.height * 0.7)
+        monpon.x = monpon.x - monster.size.width * 0.9
+        //monpon.y = monpon.y + monster.size.height * 0.9
+        monProjectile.position = monpon
+        monProjectile.physicsBody = SKPhysicsBody(circleOfRadius: monProjectile.size.width/2)
+        monProjectile.physicsBody?.dynamic = true
+        monProjectile.physicsBody?.categoryBitMask = PhysicsCategory.Projectile
+        monProjectile.physicsBody?.contactTestBitMask = PhysicsCategory.Player
+        monProjectile.physicsBody?.collisionBitMask = PhysicsCategory.None
+        monProjectile.physicsBody?.usesPreciseCollisionDetection = true
+        self.addChild(monProjectile)
+        
+        let deltaX = player.position.x - monProjectile.position.x
+        let deltaY = player.position.y - monProjectile.position.y
+        let angle = atan2(deltaX, deltaY)
+        //monProjectile.position = monster.position
+        print(monProjectile.position)
+        //print(monster.position)
+        //monProjectile.zRotation = angle - 90 * DegreesToRadians
+        //let missileMoveAction = SKAction.moveTo(monster.position, duration: 2)
+        //monProjectile.runAction(missileMoveAction) {
+            monProjectile.physicsBody?.applyAngularImpulse(angle)
+        print(angle)
+        //}
+        print("monster shooting")
     }
    
     override func update(currentTime: CFTimeInterval) {

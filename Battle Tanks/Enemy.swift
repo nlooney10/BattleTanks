@@ -12,7 +12,7 @@ import SpriteKit
 class Enemy: SKSpriteNode {
     
     override init(texture: SKTexture?, color: UIColor, size: CGSize) {
-        super.init(texture: nil, color: UIColor.blackColor(), size: size)
+        super.init(texture: texture, color: UIColor.blackColor(), size: size)
     }
     
     convenience init(pos: CGPoint) {
