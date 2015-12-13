@@ -31,6 +31,7 @@
 		E5DC7E7A1BF2DFD80008FB53 /* M1 Garand.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = E5DC7E791BF2DFD80008FB53 /* M1 Garand.mp3 */; };
 		E5DC7E7C1BF2DFE10008FB53 /* Blast.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = E5DC7E7B1BF2DFE10008FB53 /* Blast.mp3 */; };
 		E5DC7E7E1BF2E0A40008FB53 /* GameOverScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5DC7E7D1BF2E0A40008FB53 /* GameOverScene.swift */; };
+		EC1BD1931C1DDD6100025557 /* Joystick.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC1BD1921C1DDD6100025557 /* Joystick.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -81,6 +82,7 @@
 		E5DC7E791BF2DFD80008FB53 /* M1 Garand.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "M1 Garand.mp3"; sourceTree = "<group>"; };
 		E5DC7E7B1BF2DFE10008FB53 /* Blast.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = Blast.mp3; sourceTree = "<group>"; };
 		E5DC7E7D1BF2E0A40008FB53 /* GameOverScene.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GameOverScene.swift; sourceTree = "<group>"; };
+		EC1BD1921C1DDD6100025557 /* Joystick.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Joystick.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -140,6 +142,7 @@
 				E55B43661BF169110044D7FB /* GameScene.swift */,
 				E5585E5B1C0BF050004D15E4 /* Walls.swift */,
 				E58E82C81C16895600EA39F2 /* Player.swift */,
+				EC1BD1921C1DDD6100025557 /* Joystick.swift */,
 				E50F8CC81C136E5E00BF1CAB /* Enemy.swift */,
 				E51F6D5F1BFEC9AD0099C523 /* ControllerButton.swift */,
 				E5DC7E7D1BF2E0A40008FB53 /* GameOverScene.swift */,
@@ -335,6 +338,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EC1BD1931C1DDD6100025557 /* Joystick.swift in Sources */,
 				E50F8CC91C136E5F00BF1CAB /* Enemy.swift in Sources */,
 				E55B43671BF169110044D7FB /* GameScene.swift in Sources */,
 				E55B43691BF169110044D7FB /* GameViewController.swift in Sources */,
