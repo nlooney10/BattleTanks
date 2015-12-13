@@ -62,32 +62,26 @@ let Pi = CGFloat(M_PI)
 let DegreesToRadians = Pi / 180
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
+	
     var player = SKSpriteNode(imageNamed: "player")
     var monster = SKSpriteNode(imageNamed: "monster")
-    let buttonDirUp1 = ControllerButton(imageNamed: "button_dir_up_0", position: CGPoint(x: 100, y: 150))
-    let buttonDirUp2 = ControllerButton(imageNamed: "button_dir_up_0", position: CGPoint(x: 550, y: 150))
-    let buttonDirLeft1 = ControllerButton(imageNamed: "button_dir_left_0", position: CGPoint(x: 50, y: 100))
-    let buttonDirLeft2 = ControllerButton(imageNamed: "button_dir_left_0", position: CGPoint(x: 500, y: 100))
-    let buttonDirDown1 = ControllerButton(imageNamed: "button_dir_down_0", position: CGPoint(x: 100, y: 50))
-    let buttonDirDown2 = ControllerButton(imageNamed: "button_dir_down_0",position: CGPoint(x: 550, y: 50))
-    let buttonDirRight1 = ControllerButton(imageNamed: "button_dir_right_0",position: CGPoint(x: 150, y: 100))
-    let buttonDirRight2 = ControllerButton(imageNamed: "button_dir_right_0",position: CGPoint(x: 600, y: 100))
-    
-    var pressedButtons1 = [SKSpriteNode]()
-    var pressedButtons2 = [SKSpriteNode]()
     var monstersDestroyed = 0
     var shooting = false
     var lastShootingTime: CFTimeInterval = 0
     var delayBetweenShots: CFTimeInterval = 0.5
     var shooter: NSTimer?
     var monsterShooter: NSTimer?
+	var joystick:Joystick?
+	var joystick2:Joystick?
     
     override init(size: CGSize) {
+		
         super.init(size: size)
         scaleMode = SKSceneScaleMode.AspectFill
     }
 
     required init?(coder aDecoder: NSCoder) {
+		
         fatalError("init(coder:) has not been implemented")
     }
     
@@ -156,103 +150,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         line.physicsBody?.collisionBitMask = PhysicsCategory.All
         self.addChild(line)
         
-        self.monsterShooter = NSTimer.scheduledTimerWithTimeInterval(0.5, target: self, selector: "enemyShoot", userInfo: nil, repeats: true)
-        
-        buttonDirUp1.alpha = 0.2
-        self.addChild(buttonDirUp1)
-        
-        buttonDirUp2.alpha = 0.2
-        self.addChild(buttonDirUp2)
-        
-        buttonDirLeft1.alpha = 0.2
-        self.addChild(buttonDirLeft1)
-        
-        buttonDirLeft2.alpha = 0.2
-        self.addChild(buttonDirLeft2)
-        
-        buttonDirDown1.alpha = 0.2
-        self.addChild(buttonDirDown1)
-        
-        buttonDirDown2.alpha = 0.2
-        self.addChild(buttonDirDown2)
-        
-        buttonDirRight1.alpha = 0.2
-        self.addChild(buttonDirRight1)
-        
-        buttonDirRight2.alpha = 0.2
-        self.addChild(buttonDirRight2)
-        
-        let l = 94.0 as CGFloat // Radius of Circle
-        let l1 = 94.0 as CGFloat
-        let x0 = 90.0 as CGFloat
-        let x1 = 550.0 as CGFloat
-        let y0 = 100.0 as CGFloat
-        let y1 = 100.0 as CGFloat
-        // tangent of 60 degrees angle
-        let angle = CGFloat(tan(M_PI / 3))
-        
-        // hitboxes are within a range of 0~4.0 pixels and angles of -60~60 degrees
-        buttonDirUp1.hitbox = {
-            (location: CGPoint) -> Bool in
-            let is_above_y0 = location.y - y0 > 0
-            let is_within_angle = (abs(location.x - x0) <= abs(location.y - y0) * angle)
-            let is_within_radius = (location.x - x0) ** 2 + (location.y - y0) ** 2 <= l ** 2
-            return is_above_y0 && is_within_angle && is_within_radius
-        }
-        // Right
-        buttonDirUp2.hitbox = {
-            (location: CGPoint) -> Bool in
-            let is_above_y1 = location.y - y1 > 0
-            let is_within_angle = (abs(location.x - x1) <= abs(location.y - y1) * angle)
-            let is_within_radius = (location.x - x1) ** 2 + (location.y - y1) ** 2 <= l1 ** 2
-            return is_above_y1 && is_within_angle && is_within_radius
-        }
-        buttonDirLeft1.hitbox = {
-            (location: CGPoint) -> Bool in
-            let is_left_of_x0 = location.x - x0 < 0
-            let is_within_angle = (abs(location.x - x0) * angle >= abs(location.y - y0))
-            let is_within_radius = (location.x - x0) ** 2 + (location.y - y0) ** 2 <= l ** 2
-            return is_left_of_x0 && is_within_angle && is_within_radius
-        }
-        // Right
-        buttonDirLeft2.hitbox = {
-            (location: CGPoint) -> Bool in
-            let is_left_of_x1 = location.x - x1 < 0
-            let is_within_angle = (abs(location.x - x1) * angle >= abs(location.y - y1))
-            let is_within_radius = (location.x - x1) ** 2 + (location.y - y1) ** 2 <= l1 ** 2
-            return is_left_of_x1 && is_within_angle && is_within_radius
-        }
-        buttonDirDown1.hitbox = {
-            (location: CGPoint) -> Bool in
-            let is_below_of_y0 = location.y - y0 < 0
-            let is_within_angle = (abs(location.x - x0) <= abs(location.y - y0) * angle)
-            let is_within_radius = (location.x - x0) ** 2 + (location.y - y0) ** 2 <= l ** 2
-            return is_below_of_y0 && is_within_angle && is_within_radius
-        }
-        // Right
-        buttonDirDown2.hitbox = {
-            (location: CGPoint) -> Bool in
-            let is_below_of_y1 = location.y - y1 < 0
-            let is_within_angle = (abs(location.x - x1) <= abs(location.y - y1) * angle)
-            let is_within_radius = (location.x - x1) ** 2 + (location.y - y1) ** 2 <= l1 ** 2
-            return is_below_of_y1 && is_within_angle && is_within_radius
-        }
-        buttonDirRight1.hitbox = {
-            (location: CGPoint) -> Bool in
-            let is_right_of_x0 = location.x - x0 > 0
-            let is_within_angle = (abs(location.x - x0) * angle >= abs(location.y - y0))
-            let is_within_radius = (location.x - x0) ** 2 + (location.y - y0) ** 2 <= l ** 2
-            return is_right_of_x0 && is_within_angle && is_within_radius
-        }
-        // Right
-        buttonDirRight2.hitbox = {
-            (location: CGPoint) -> Bool in
-            let is_right_of_x1 = location.x - x1 > 0
-            let is_within_angle = (abs(location.x - x1) * angle >= abs(location.y - y1))
-            let is_within_radius = (location.x - x1) ** 2 + (location.y - y0) ** 2 <= l1 ** 2
-            return is_right_of_x1 && is_within_angle && is_within_radius
-        }
-        
+//        self.monsterShooter = NSTimer.scheduledTimerWithTimeInterval(0.5, target: self, selector: "enemyShoot", userInfo: nil, repeats: true)
+//		
 //        let backgroundMusic = SKAudioNode(fileNamed: "Chugging Along.mp3")
 //        backgroundMusic.autoplayLooped = true
 //        SKAction.changeVolumeTo(0.1, duration: 0)
@@ -272,99 +171,42 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 //        
 //        music.runAction(repeatForever)
         print(self.size)
+		
+		let joystick = Joystick(position: CGPoint(x: 60, y: 50))
+		self.addChild(joystick)
+		self.joystick = joystick
+		
+		let joystick2 = Joystick(position: CGPoint(x: 250, y: 50))
+		self.addChild(joystick2)
+		joystick2.buttonPressed = {
+
+			self.shoot()
+		}
+		self.joystick2 = joystick2
     }
     
-    override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
-        for touch: AnyObject in touches {
-            let location = touch.locationInNode(self)
-            
-            for button in [buttonDirUp1, buttonDirLeft1, buttonDirDown1, buttonDirRight1] {
-                // Check if they are already registered in the list
-                if button.hitboxContainsPoint(location) && pressedButtons1.indexOf(button) == nil {
-                    pressedButtons1.append(button)
-                    print("left buttons tapped \(location)")
-                }
-            }
-            for button in [buttonDirUp2, buttonDirLeft2, buttonDirDown2, buttonDirRight2] {
-                // Check if they are already registered in the list
-                if button.hitboxContainsPoint(location) && pressedButtons2.indexOf(button) == nil && pressedButtons2.count < 2 {
-                    pressedButtons2.append(button)
-                    print("right buttons tapped \(location)")
-                    if pressedButtons2.count == 1 {
-                        self.shooter = NSTimer.scheduledTimerWithTimeInterval(0.5, target: self, selector: "shoot", userInfo: nil, repeats: true)
-                        self.shooter!.fire()
-                    }
-                }
-            }
-        }
-        // Check all the 4 buttons and set the transparency
-        for button in [buttonDirUp1, buttonDirLeft1, buttonDirDown1, buttonDirRight1] {
-            if pressedButtons1.indexOf(button) == nil {
-                button.alpha = 0.2
-            }
-            else {
-                button.alpha = 0.8
-            }
-        }
-        for button in [buttonDirUp2, buttonDirLeft2, buttonDirDown2, buttonDirRight2] {
-            if pressedButtons2.indexOf(button) == nil {
-                button.alpha = 0.2
-            }
-            else {
-                button.alpha = 0.8
-            }
-        }
+	override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
+
+		if let joystick = self.joystick {
+		
+			joystick.touchesBegan(touches, withEvent: event)
+		}
+		if let joystick = self.joystick2 {
+			
+			joystick.touchesBegan(touches, withEvent: event)
+		}
     }
     
     override func touchesMoved(touches: Set<UITouch>, withEvent event: UIEvent?) {
-        for touch: AnyObject in touches {
-            let location = touch.locationInNode(self)
-            let previousLocation = touch.previousLocationInNode(self)
-            
-            for button in [buttonDirDown1, buttonDirLeft1, buttonDirRight1, buttonDirUp1] {
-                // If you take your finger off the button you had it on
-                if button.hitboxContainsPoint(previousLocation) && !button.hitboxContainsPoint(location) {
-                    let index = pressedButtons1.indexOf(button)
-                    if index != nil {
-                        pressedButtons1.removeAtIndex(index!)
-                    }
-                }
-                // If you move from one button to another without lifting
-                else if !button.hitboxContainsPoint(previousLocation) && button.hitboxContainsPoint(location) && pressedButtons2.indexOf(button) == nil {
-                        pressedButtons1.append(button)
-                }
-            }
-            
-            for button in [buttonDirDown2, buttonDirLeft2, buttonDirRight2, buttonDirUp2] {
-                // If you take your finger off the button you had it on
-                if button.hitboxContainsPoint(previousLocation) && !button.hitboxContainsPoint(location) {
-                    let index = pressedButtons2.indexOf(button)
-                    if index != nil {
-                        pressedButtons2.removeAtIndex(index!)
-                    }
-                }
-                    // If you move from one button to another without lifting
-                else if !button.hitboxContainsPoint(previousLocation) && button.hitboxContainsPoint(location) && pressedButtons2.indexOf(button) == nil {
-                    pressedButtons2.append(button)
-                }
-            }
-        }
-        for button in [buttonDirUp1, buttonDirLeft1, buttonDirDown1, buttonDirRight1] {
-            if pressedButtons1.indexOf(button) == nil {
-                button.alpha = 0.2
-            }
-            else {
-                button.alpha = 0.8
-            }
-        }
-        for button in [buttonDirUp2, buttonDirLeft2, buttonDirDown2, buttonDirRight2] {
-            if pressedButtons2.indexOf(button) == nil {
-                button.alpha = 0.2
-            }
-            else {
-                button.alpha = 0.8
-            }
-        }
+		
+		if let joystick = self.joystick {
+			
+			joystick.touchesMoved(touches, withEvent: event)
+		}
+		if let joystick = self.joystick2 {
+			
+			joystick.touchesMoved(touches, withEvent: event)
+		}
     }
     
     func random() -> CGFloat {
@@ -395,69 +237,20 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     //}
     
     override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
-        touchesEndedOrCancelled(touches, withEvent: event)
+		
+		if let joystick = self.joystick {
+			
+			joystick.touchesEnded(touches, withEvent: event)
+		}
+		if let joystick = self.joystick2 {
+			
+			joystick.touchesEnded(touches, withEvent: event)
+		}
     }
     
     override func touchesCancelled(touches: Set<UITouch>?, withEvent event: UIEvent?) {
-        touchesEndedOrCancelled(touches, withEvent: event)
-    }
-    
-    func touchesEndedOrCancelled(touches: Set<UITouch>?, withEvent event: UIEvent?) {
-        for touch: AnyObject in touches! {
-            let location = touch.locationInNode(self)
-            let previousLocation = touch.previousLocationInNode(self)
-            
-            for button in [buttonDirUp1, buttonDirLeft1, buttonDirDown1, buttonDirRight1] {
-                if button.hitboxContainsPoint(location) {
-                    let index = pressedButtons1.indexOf(button)
-                    if index != nil {
-                        pressedButtons1.removeAtIndex(index!)
-                    }
-                }
-                else if (button.hitboxContainsPoint(previousLocation)) {
-                    let index = pressedButtons1.indexOf(button)
-                    if index != nil {
-                        pressedButtons1.removeAtIndex(index!)
-                    }
-                }
-            }
-            for button in [buttonDirUp2, buttonDirLeft2, buttonDirDown2, buttonDirRight2] {
-                if button.hitboxContainsPoint(location) {
-                    let index = pressedButtons2.indexOf(button)
-                    if index != nil {
-                        pressedButtons2.removeAtIndex(index!)
-                        if let shooter = self.shooter {
-                            shooter.invalidate()
-                        }
-                    }
-                }
-                else if (button.hitboxContainsPoint(previousLocation)) {
-                    let index = pressedButtons2.indexOf(button)
-                    if index != nil {
-                        pressedButtons2.removeAtIndex(index!)
-                        if let shooter = self.shooter {
-                            shooter.invalidate()
-                        }
-                    }
-                }
-            }
-        }
-        for button in [buttonDirUp1, buttonDirLeft1, buttonDirDown1, buttonDirRight1] {
-            if pressedButtons1.indexOf(button) == nil {
-                button.alpha = 0.2
-            }
-            else {
-                button.alpha = 0.8
-            }
-        }
-        for button in [buttonDirUp2, buttonDirLeft2, buttonDirDown2, buttonDirRight2] {
-            if pressedButtons2.indexOf(button) == nil {
-                button.alpha = 0.2
-            }
-            else {
-                button.alpha = 0.8
-            }
-        }
+		
+		print("=== touch cancelled")
     }
     
     func projectileDidCollideWithMonster(projectile:SKSpriteNode, monster:SKSpriteNode) {
@@ -515,98 +308,127 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func shoot() {
-        
+		
+		guard self.joystick2 != nil
+			else {
+				
+				return
+		}
+		print("=== shoot")
         // Play sound effect on touch
-        if pressedButtons2.count > 0 {
-            runAction(SKAction.playSoundFileNamed("M1 Garand.mp3", waitForCompletion: false))
-            SKAction.changeVolumeTo(0.1, duration: 0)
+		runAction(SKAction.playSoundFileNamed("M1 Garand.mp3", waitForCompletion: false))
+		SKAction.changeVolumeTo(0.1, duration: 0)
+	
+		// Set up initial location of projectile
+		let projectile = SKSpriteNode(imageNamed: "projectile")
+		var playerpos = player.position
+		if joystick2!.pressedButtons.count == 1 {
+			
+			if joystick2!.buttonLeft.pressed {
+				
+				playerpos.x = playerpos.x - (0.9 * player.size.width)
+				projectile.position = playerpos
+			} else if joystick2!.buttonRight.pressed {
+				
+				playerpos.x = playerpos.x + (0.9 * player.size.width)
+				projectile.position = playerpos
+			} else if joystick2!.buttonUp.pressed {
+				
+				playerpos.y = playerpos.y + (0.8 * player.size.height)
+				projectile.position = playerpos
+			} else if joystick2!.buttonDown.pressed {
+				
+				playerpos.y = playerpos.y - (0.8 * player.size.height)
+				projectile.position = playerpos
+			}
+		} else if joystick2!.pressedButtons.count == 2 {
+			
+			if joystick2!.buttonUp.pressed && joystick2!.buttonRight.pressed {
+				
+				playerpos.y = playerpos.y + (0.8 * player.size.height)
+				playerpos.x = playerpos.x + (0.8 * player.size.width)
+				projectile.position = playerpos
+			} else if joystick2!.buttonUp.pressed && joystick2!.buttonLeft.pressed {
+				
+				playerpos.y = playerpos.y + (0.8 * player.size.height)
+				playerpos.x = playerpos.x - (0.8 * player.size.width)
+				projectile.position = playerpos
+			} else if joystick2!.buttonDown.pressed && joystick2!.buttonRight.pressed {
+				
+				playerpos.x = playerpos.x + (0.8 * player.size.width)
+				playerpos.y = playerpos.y - (0.8 * player.size.height)
+				projectile.position = playerpos
+			} else if joystick2!.buttonDown.pressed && joystick2!.buttonLeft.pressed {
+				
+				playerpos.y = playerpos.y - (0.8 * player.size.height)
+				playerpos.x = playerpos.x - (0.8 * player.size.width)
+				projectile.position = playerpos
+			}
+		}
             
-            // Set up initial location of projectile
-            let projectile = SKSpriteNode(imageNamed: "projectile")
-            var playerpos = player.position
-            if pressedButtons2.count == 1 {
-                if pressedButtons2.indexOf(buttonDirLeft2) != nil {
-                    playerpos.x = playerpos.x - (0.9 * player.size.width)
-                    projectile.position = playerpos
-                }
-                else if pressedButtons2.indexOf(buttonDirRight2) != nil {
-                    playerpos.x = playerpos.x + (0.9 * player.size.width)
-                    projectile.position = playerpos
-                }
-                else if pressedButtons2.indexOf(buttonDirUp2) != nil {
-                    playerpos.y = playerpos.y + (0.8 * player.size.height)
-                    projectile.position = playerpos
-                }
-                else if pressedButtons2.indexOf(buttonDirDown2) != nil {
-                    playerpos.y = playerpos.y - (0.8 * player.size.height)
-                    projectile.position = playerpos
-                }
-            }
-            else if pressedButtons2.count == 2 {
-                if (pressedButtons2.indexOf(buttonDirUp2) != nil) && (pressedButtons2.indexOf(buttonDirRight2) != nil) {
-                    playerpos.y = playerpos.y + (0.8 * player.size.height)
-                    playerpos.x = playerpos.x + (0.8 * player.size.width)
-                    projectile.position = playerpos
-                }
-                else if (pressedButtons2.indexOf(buttonDirUp2) != nil) && (pressedButtons2.indexOf(buttonDirLeft2) != nil) {
-                    playerpos.y = playerpos.y + (0.8 * player.size.height)
-                    playerpos.x = playerpos.x - (0.8 * player.size.width)
-                    projectile.position = playerpos
-                }
-                else if (pressedButtons2.indexOf(buttonDirDown2) != nil) && (pressedButtons2.indexOf(buttonDirRight2) != nil) {
-                    playerpos.x = playerpos.x + (0.8 * player.size.width)
-                    playerpos.y = playerpos.y - (0.8 * player.size.height)
-                    projectile.position = playerpos
-                }
-                else if (pressedButtons2.indexOf(buttonDirDown2) != nil) && (pressedButtons2.indexOf(buttonDirLeft2) != nil) {
-                    playerpos.y = playerpos.y - (0.8 * player.size.height)
-                    playerpos.x = playerpos.x - (0.8 * player.size.width)
-                    projectile.position = playerpos
-                }
-            }
-            
-            projectile.physicsBody = SKPhysicsBody(circleOfRadius: projectile.size.width/2)
-            projectile.physicsBody?.dynamic = true
-            projectile.physicsBody?.categoryBitMask = PhysicsCategory.Projectile
-            projectile.physicsBody?.contactTestBitMask = PhysicsCategory.Monster
-            projectile.physicsBody?.collisionBitMask = PhysicsCategory.None
-            // Important to set for fast moving bodies (like projectiles), because otherwise there is a chance that two fast moving bodies can pass through each other without a collision being detected
-            projectile.physicsBody?.usesPreciseCollisionDetection = true
-            
-            var speed: CGFloat = 3.0
-            
-            if pressedButtons2.count > 0 {
-                addChild(projectile)
-            }
-            
-            if pressedButtons2.count == 2 {
-                speed = speed / sqrt(2.0)
-                if (pressedButtons2.indexOf(buttonDirUp2) != nil) && (pressedButtons2.indexOf(buttonDirRight2) != nil) && (pressedButtons2.indexOf(buttonDirDown2) == nil) && (pressedButtons2.indexOf(buttonDirLeft2) == nil){
-                    projectile.physicsBody?.applyImpulse(CGVector(dx:speed, dy:speed))
-                }
-                else if (pressedButtons2.indexOf(buttonDirUp2) != nil) && (pressedButtons2.indexOf(buttonDirLeft2) != nil) && (pressedButtons2.indexOf(buttonDirDown2) == nil) && (pressedButtons2.indexOf(buttonDirRight2) == nil) {
-                    projectile.physicsBody?.applyImpulse(CGVector(dx:-speed, dy:speed))
-                }
-                else if (pressedButtons2.indexOf(buttonDirDown2) != nil) && (pressedButtons2.indexOf(buttonDirRight2) != nil) && (pressedButtons2.indexOf(buttonDirUp2) == nil) && (pressedButtons2.indexOf(buttonDirLeft2) == nil) {
-                    projectile.physicsBody?.applyImpulse(CGVector(dx:speed, dy:-speed))
-                }
-                else if (pressedButtons2.indexOf(buttonDirDown2) != nil) && (pressedButtons2.indexOf(buttonDirLeft2) != nil) && (pressedButtons2.indexOf(buttonDirUp2) == nil) && (pressedButtons2.indexOf(buttonDirRight2) == nil) {
-                    projectile.physicsBody?.applyImpulse(CGVector(dx:-speed, dy:-speed))
-                }
-            }
-            
-            else if pressedButtons2.indexOf(buttonDirUp2) != nil {
-                projectile.physicsBody?.applyImpulse(CGVector(dx:0, dy:speed))
-            }
-            else if pressedButtons2.indexOf(buttonDirDown2) != nil {
-                projectile.physicsBody?.applyImpulse(CGVector(dx:0, dy:-speed))
-            }
-            else if pressedButtons2.indexOf(buttonDirLeft2) != nil {
-                projectile.physicsBody?.applyImpulse(CGVector(dx:-speed, dy:0))
-            }
-            else if pressedButtons2.indexOf(buttonDirRight2) != nil {
-                projectile.physicsBody?.applyImpulse(CGVector(dx:speed, dy:0))
-            }
+		projectile.physicsBody = SKPhysicsBody(circleOfRadius: projectile.size.width/2)
+		projectile.physicsBody?.dynamic = true
+		projectile.physicsBody?.categoryBitMask = PhysicsCategory.Projectile
+		projectile.physicsBody?.contactTestBitMask = PhysicsCategory.Monster
+		projectile.physicsBody?.collisionBitMask = PhysicsCategory.None
+		// Important to set for fast moving bodies (like projectiles), because otherwise there is a chance that two fast moving bodies can pass through each other without a collision being detected
+		projectile.physicsBody?.usesPreciseCollisionDetection = true
+		
+		var speed: CGFloat = 3.0
+		
+		if joystick2!.pressedButtons.count > 0 {
+			
+			addChild(projectile)
+		}
+		
+		if joystick2!.pressedButtons.count == 2 {
+			
+			speed = speed / sqrt(2.0)
+			
+			if joystick2!.buttonUp.pressed &&
+				joystick2!.buttonRight.pressed &&
+				!joystick2!.buttonDown.pressed &&
+				!joystick2!.buttonLeft.pressed {
+					
+				projectile.physicsBody?.applyImpulse(CGVector(dx:speed, dy:speed))
+			}
+			else if joystick2!.buttonUp.pressed &&
+				joystick2!.buttonLeft.pressed &&
+				!joystick2!.buttonDown.pressed &&
+				!joystick2!.buttonRight.pressed {
+			
+				projectile.physicsBody?.applyImpulse(CGVector(dx:-speed, dy:speed))
+			}
+			else if joystick2!.buttonDown.pressed &&
+				joystick2!.buttonRight.pressed &&
+				!joystick2!.buttonUp.pressed &&
+				!joystick2!.buttonLeft.pressed {
+					
+				projectile.physicsBody?.applyImpulse(CGVector(dx:speed, dy:-speed))
+			}
+			else if joystick2!.buttonDown.pressed &&
+				joystick2!.buttonLeft.pressed &&
+				!joystick2!.buttonUp.pressed &&
+				!joystick2!.buttonRight.pressed {
+					
+				projectile.physicsBody?.applyImpulse(CGVector(dx:-speed, dy:-speed))
+			}
+		} else if joystick2!.buttonUp.pressed {
+			
+			projectile.physicsBody?.applyImpulse(CGVector(dx:0, dy:speed))
+		}
+		else if joystick2!.buttonDown.pressed {
+			
+			projectile.physicsBody?.applyImpulse(CGVector(dx:0, dy:-speed))
+		}
+		else if joystick2!.buttonLeft.pressed {
+			
+			projectile.physicsBody?.applyImpulse(CGVector(dx:-speed, dy:0))
+		}
+		else if joystick2!.buttonRight.pressed {
+			
+			projectile.physicsBody?.applyImpulse(CGVector(dx:speed, dy:0))
+		}
 //
 //        // Determine offset of location to projectile
 //        let offset = touchLocation - projectile.position
@@ -626,8 +448,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 //        let actionMove = SKAction.moveTo(realDest, duration: 2.0)
 //        let actionMoveDone = SKAction.removeFromParent()
 //        projectile.runAction(SKAction.sequence([actionMove, actionMoveDone]))
-        print("Shooting")
-        }
     }
     
     func enemyShoot() {
@@ -661,24 +481,33 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
    
     override func update(currentTime: CFTimeInterval) {
+		
         /* Called before each frame is rendered */
         var speed: CGFloat = 3.0
-        
-        if pressedButtons1.count == 2 {
-            speed = speed / sqrt(2.0)
-        }
+		
+		if let joystick = joystick {
+			
+			if joystick.pressedButtons.count == 2 {
+				
+				speed = speed / sqrt(2.0)
+			}
 
-        if pressedButtons1.indexOf(buttonDirUp1) != nil {
-            player.position.y += speed
-        }
-        if pressedButtons1.indexOf(buttonDirDown1) != nil {
-            player.position.y -= speed
-        }
-        if pressedButtons1.indexOf(buttonDirLeft1) != nil {
-            player.position.x -= speed
-        }
-        if pressedButtons1.indexOf(buttonDirRight1) != nil {
-            player.position.x += speed
-        }
+			if joystick.buttonUp.pressed {
+				
+				player.position.y += speed
+			}
+			if joystick.buttonDown.pressed {
+				
+				player.position.y -= speed
+			}
+			if joystick.buttonLeft.pressed {
+				
+				player.position.x -= speed
+			}
+			if joystick.buttonRight.pressed {
+				
+				player.position.x += speed
+			}
+		}
     }
 }
