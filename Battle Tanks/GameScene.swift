@@ -97,26 +97,20 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         //self.addChild(bgimage)
         //bgimage.position = CGPointMake(self.size.width/2, self.size.height/2)
         
-        //let player = Player(pos: CGPoint(x: size.width * 0.3, y: size.height * 0.7))
-        player.position = CGPoint(x: size.width * 0.3, y: size.height * 0.7)
-        player.physicsBody = SKPhysicsBody(rectangleOfSize: player.size)
-        // Physics engine will not control movement of monster, your code will
-        player.physicsBody?.dynamic = true
-        // Set category of bitmask
-        player.physicsBody?.categoryBitMask = PhysicsCategory.Player
-        // Indicates what categories of objects this object should notify the contact listener when they intersect
-        player.physicsBody?.contactTestBitMask = PhysicsCategory.None
-        // Indicates what categories of objects this object that the physics engine handle contact responses to (i.e. bounce off of)
-        player.physicsBody?.collisionBitMask = PhysicsCategory.Walls
-        player.physicsBody?.allowsRotation = false
+        let player = Player(pos: CGPoint(x: size.width * 0.3, y: size.height * 0.7))
+//        player.position = CGPoint(x: size.width * 0.3, y: size.height * 0.7)
+//        player.physicsBody = SKPhysicsBody(rectangleOfSize: player.size)
+//        // Physics engine will not control movement of monster, your code will
+//        player.physicsBody?.dynamic = true
+//        // Set category of bitmask
+//        player.physicsBody?.categoryBitMask = PhysicsCategory.Player
+//        // Indicates what categories of objects this object should notify the contact listener when they intersect
+//        player.physicsBody?.contactTestBitMask = PhysicsCategory.None
+//        // Indicates what categories of objects this object that the physics engine handle contact responses to (i.e. bounce off of)
+//        player.physicsBody?.collisionBitMask = PhysicsCategory.Walls
+//        player.physicsBody?.allowsRotation = false
         self.addChild(player)
-        
-//        runAction(SKAction.repeatActionForever(
-//            SKAction.sequence([
-//                SKAction.runBlock(addMonster),
-//                SKAction.waitForDuration(3.0)
-//                ])
-//            ))
+        self.player = player
         
         let monster = Enemy(pos: CGPoint(x: size.width * 0.7, y: size.height * 0.7))
         monster.position = CGPoint(x: size.width * 0.7, y: size.height * 0.7)
@@ -156,7 +150,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         line.physicsBody?.collisionBitMask = PhysicsCategory.All
         self.addChild(line)
         
-        self.monsterShooter = NSTimer.scheduledTimerWithTimeInterval(0.5, target: self, selector: "enemyShoot", userInfo: nil, repeats: true)
+        self.monsterShooter = NSTimer.scheduledTimerWithTimeInterval(1.5, target: self, selector: "enemyShoot", userInfo: nil, repeats: true)
         
         buttonDirUp1.alpha = 0.2
         self.addChild(buttonDirUp1)
@@ -366,34 +360,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
         }
     }
-    
-    func random() -> CGFloat {
-        return CGFloat(Float(arc4random()) / 0xFFFFFFFF)
-    }
-    
-    func random(min min: CGFloat, max: CGFloat) -> CGFloat {
-        return random() * (max - min) + min
-    }
-    
-    //func addMonster() {
         
-        // Create sprite
-        //let monster = Enemy(pos: CGPoint(x: size.width * 0.7, y: size.height * 0.7))
-        //addChild(monster)
-        
-        // Create the actions
-        //let actionMove = SKAction.moveTo(CGPoint(x: -monster.size.width/2, y: actualY), duration: NSTimeInterval(actualDuration))
-        //let actionMoveDone = SKAction.removeFromParent()
-//        let loseAction = SKAction.runBlock() {
-//            let reveal = SKTransition.flipHorizontalWithDuration(0.5)
-//            let gameOverScene = GameOverScene(size: self.size, won: false)
-//            self.view?.presentScene(gameOverScene, transition: reveal)
-//        }
-//        monster.runAction(SKAction.sequence([actionMove, loseAction, actionMoveDone]))
-        //monster.runAction(SKAction.sequence([actionMove, actionMoveDone]))
-        
-    //}
-    
     override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
         touchesEndedOrCancelled(touches, withEvent: event)
     }
@@ -476,6 +443,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
+    func projectileDidCollideWithPlayer(projectile:SKSpriteNode, player:SKSpriteNode) {
+        projectile.removeFromParent()
+        player.removeFromParent()
+        let loseAction = SKAction.runBlock() {
+            let reveal = SKTransition.flipHorizontalWithDuration(0.5)
+            let gameOverScene = GameOverScene(size: self.size, won: false)
+            self.view?.presentScene(gameOverScene, transition: reveal)
+        }
+        runAction(SKAction.sequence([loseAction]))
+    }
+    
     func monsterDidCollideWithWall(monster:SKSpriteNode, wall:SKShapeNode) {
         monster.removeFromParent()
     }
@@ -505,6 +483,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if ((firstBody.categoryBitMask & PhysicsCategory.Monster != 0) && (secondBody.categoryBitMask & PhysicsCategory.Projectile != 0)) {
             if let firstNode = firstBody.node as? SKSpriteNode, secondNode = secondBody.node as? SKSpriteNode {
                 projectileDidCollideWithMonster(firstBody.node as! SKSpriteNode, monster: secondBody.node as! SKSpriteNode)
+            }
+        }
+        if ((firstBody.categoryBitMask & PhysicsCategory.Projectile != 0) && (secondBody.categoryBitMask & PhysicsCategory.Player != 0)) {
+            if let firstNode = firstBody.node as? SKSpriteNode, secondNode = secondBody.node as? SKSpriteNode {
+                projectileDidCollideWithPlayer(firstBody.node as! SKSpriteNode, player: secondBody.node as! SKSpriteNode)
             }
         }
         if ((firstBody.categoryBitMask & PhysicsCategory.Projectile != 0) && (secondBody.categoryBitMask & PhysicsCategory.Walls != 0)) {
@@ -570,7 +553,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             projectile.physicsBody?.categoryBitMask = PhysicsCategory.Projectile
             projectile.physicsBody?.contactTestBitMask = PhysicsCategory.Monster
             projectile.physicsBody?.collisionBitMask = PhysicsCategory.None
-            // Important to set for fast moving bodies (like projectiles), because otherwise there is a chance that two fast moving bodies can pass through each other without a collision being detected
             projectile.physicsBody?.usesPreciseCollisionDetection = true
             
             var speed: CGFloat = 3.0
@@ -594,7 +576,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                     projectile.physicsBody?.applyImpulse(CGVector(dx:-speed, dy:-speed))
                 }
             }
-            
             else if pressedButtons2.indexOf(buttonDirUp2) != nil {
                 projectile.physicsBody?.applyImpulse(CGVector(dx:0, dy:speed))
             }
@@ -607,31 +588,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             else if pressedButtons2.indexOf(buttonDirRight2) != nil {
                 projectile.physicsBody?.applyImpulse(CGVector(dx:speed, dy:0))
             }
-//
-//        // Determine offset of location to projectile
-//        let offset = touchLocation - projectile.position
-//
-//        addChild(projectile)
-//
-//        // Get the direction of where to shoot
-//        let direction = offset.normalized()
-//
-//        // Make it shoot far enough to be guaranteed off screen
-//        let shootAmount = direction * 1000
-//
-//        // Add the shoot amount to the current position
-//        let realDest = shootAmount + projectile.position
-//
-//        // Create the actions
-//        let actionMove = SKAction.moveTo(realDest, duration: 2.0)
-//        let actionMoveDone = SKAction.removeFromParent()
-//        projectile.runAction(SKAction.sequence([actionMove, actionMoveDone]))
-        print("Shooting")
+        print("Player Shooting")
         }
     }
     
     func enemyShoot() {
-        runAction(SKAction.playSoundFileNamed("M1 Garand.mp3", waitForCompletion: false))
+        //runAction(SKAction.playSoundFileNamed("M1 Garand.mp3", waitForCompletion: false))
         let monProjectile = SKSpriteNode(imageNamed: "projectile")
         var monpon = CGPoint(x: size.width * 0.7, y: size.height * 0.7)
         monpon.x = monpon.x - monster.size.width * 0.9
@@ -640,24 +602,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         monProjectile.physicsBody = SKPhysicsBody(circleOfRadius: monProjectile.size.width/2)
         monProjectile.physicsBody?.dynamic = true
         monProjectile.physicsBody?.categoryBitMask = PhysicsCategory.Projectile
-        monProjectile.physicsBody?.contactTestBitMask = PhysicsCategory.Player
+        monProjectile.physicsBody?.contactTestBitMask = PhysicsCategory.Player | PhysicsCategory.Walls
+        //monProjectile.physicsBody?.contactTestBitMask = PhysicsCategory.Walls
         monProjectile.physicsBody?.collisionBitMask = PhysicsCategory.None
         monProjectile.physicsBody?.usesPreciseCollisionDetection = true
         self.addChild(monProjectile)
         
         let deltaX = player.position.x - monProjectile.position.x
         let deltaY = player.position.y - monProjectile.position.y
-        let angle = atan2(deltaX, deltaY)
-        //monProjectile.position = monster.position
-        print(monProjectile.position)
-        //print(monster.position)
-        //monProjectile.zRotation = angle - 90 * DegreesToRadians
-        //let missileMoveAction = SKAction.moveTo(monster.position, duration: 2)
-        //monProjectile.runAction(missileMoveAction) {
-            monProjectile.physicsBody?.applyAngularImpulse(angle)
-        print(angle)
-        //}
-        print("monster shooting")
+        let angle = atan2(deltaY, deltaX)
+        monProjectile.physicsBody?.applyImpulse(CGVector(dx: cos(angle)*2, dy: sin(angle)*2))
+        print("Monster Shooting")
     }
    
     override func update(currentTime: CFTimeInterval) {

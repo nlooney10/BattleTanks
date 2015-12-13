@@ -9,16 +9,16 @@
 import SpriteKit
 
 //class Walls: SKShapeNode {
-    
+//    
 //    override init(rectOfSize: CGSize) {
-//        super.init(texture: nil, color: UIColor.blackColor(), size: size)
+//        super.init(texture: nil, color: UIColor.blackColor(), size: CGSize)
 //    }
 //    
 //    convenience init(pos: CGPoint, rectOfSize size: CGSize) {
 //        let rectangle = SKShapeNode(rectOfSize: CGSize(width:390, height:200))
-//        self.init(rectOfSize size: CGSize)
+//        self.init: (rectOfSize size: CGSize)
 //        rectangle.position = pos
-//        rectangle.size = size
+//        rectangle.rectOfSize = size
 //        rectangle.strokeColor = SKColor.blackColor()
 //        rectangle.glowWidth = 1.0
 //        rectangle.physicsBody = SKPhysicsBody(edgeChainFromPath: rectangle.path!)
